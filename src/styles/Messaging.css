@@ -1,0 +1,230 @@
+.loan-messaging-container {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  margin-bottom: 24px;
+}
+
+.messaging-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.messaging-header svg {
+  color: #3182ce;
+  flex-shrink: 0;
+}
+
+.messaging-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #1a202c;
+  flex: 1;
+}
+
+.messages-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding-right: 8px;
+}
+
+.messages-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-list::-webkit-scrollbar-track {
+  background: #f0f4f8;
+  border-radius: 3px;
+}
+
+.messages-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.messages-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+.empty-messages {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 100%;
+  color: #a0aec0;
+}
+
+.empty-messages svg {
+  opacity: 0.3;
+}
+
+.empty-messages p {
+  margin: 0;
+  font-size: 13px;
+  text-align: center;
+  max-width: 200px;
+}
+
+.message-bubble {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 8px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-bubble.lender-msg {
+  align-items: flex-start;
+}
+
+.message-bubble.borrower-msg {
+  align-items: flex-end;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.message-bubble.lender-msg .message-header {
+  justify-content: flex-start;
+}
+
+.message-bubble.borrower-msg .message-header {
+  justify-content: flex-end;
+}
+
+.sender-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.sender-name {
+  color: #1a202c;
+}
+
+.sender-role {
+  background: #edf2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+.message-time {
+  color: #a0aec0;
+  font-size: 11px;
+  margin-left: 8px;
+}
+
+.message-text {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 70%;
+  word-wrap: break-word;
+}
+
+.message-bubble.lender-msg .message-text {
+  background: #eff6ff;
+  color: #1e40af;
+  border-left: 3px solid #3182ce;
+}
+
+.message-bubble.borrower-msg .message-text {
+  background: #f0fdf4;
+  color: #166534;
+  border-right: 3px solid #38a169;
+}
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 12px;
+}
+
+.message-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+  max-height: 120px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.message-input::placeholder {
+  color: #cbd5e0;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  align-self: flex-start;
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .loan-messaging-container {
+    height: auto;
+    min-height: 400px;
+  }
+
+  .message-text {
+    max-width: 85%;
+  }
+
+  .message-input {
+    min-height: 50px;
+  }
+}

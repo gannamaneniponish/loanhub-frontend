@@ -1,0 +1,25 @@
+{
+  "name": "loanhub",
+  "version": "7.0.0",
+  "description": "Production-grade Loan Management Platform for India – Professional Edition v7",
+  "author": "LoanHub Development Team",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:open": "vite --open",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:preview": "npm run build && npm run preview"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "lucide-react": "^0.294.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.8"
+  }
+}

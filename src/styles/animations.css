@@ -1,0 +1,223 @@
+/* ── Page Transitions ── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.3s ease-out;
+}
+
+.page-exit {
+  animation: pageExit 0.3s ease-out;
+}
+
+/* ── Button Animations ── */
+@keyframes buttonHover {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes buttonPress {
+  from {
+    transform: scale(1.02);
+  }
+  to {
+    transform: scale(0.98);
+  }
+}
+
+.btn {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover {
+  animation: buttonHover 0.2s ease-out forwards;
+}
+
+.btn:active {
+  animation: buttonPress 0.1s ease-out forwards;
+}
+
+/* ── Card Hover Animation ── */
+@keyframes cardLift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-4px);
+  }
+}
+
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  animation: cardLift 0.3s ease-out forwards;
+}
+
+/* ── Loading Spinner ── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* ── Success Checkmark Animation ── */
+@keyframes successCheck {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-check {
+  animation: successCheck 0.5s ease-out;
+}
+
+/* ── Error Shake Animation ── */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ── Pulse Animation (for badges) ── */
+@keyframes pulseBadge {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.pulse-badge {
+  animation: pulseBadge 2s ease-in-out infinite;
+}
+
+/* ── Smooth Fade ── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.fade-out {
+  animation: fadeOut 0.3s ease-out;
+}
+
+/* ── Stagger Animation (for lists) ── */
+@keyframes listItemEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-item {
+  animation: listItemEnter 0.4s ease-out;
+}
+
+.list-item:nth-child(1) { animation-delay: 0.05s; }
+.list-item:nth-child(2) { animation-delay: 0.1s; }
+.list-item:nth-child(3) { animation-delay: 0.15s; }
+.list-item:nth-child(4) { animation-delay: 0.2s; }
+.list-item:nth-child(5) { animation-delay: 0.25s; }
+.list-item:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* ── Progress Bar Animation ── */
+@keyframes progressGrow {
+  from {
+    width: 0;
+  }
+}
+
+.progress-grow {
+  animation: progressGrow 2s ease-out forwards;
+}
+
+/* ── Smooth Modal Enter ── */
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-enter {
+  animation: modalEnter 0.3s ease-out;
+}
+
+/* ── Reduced Motion Support ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

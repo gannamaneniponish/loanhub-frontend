@@ -1,0 +1,309 @@
+.emi-schedule-container {
+  background: white;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  margin-bottom: 24px;
+}
+
+.emi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.emi-title {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.emi-title svg {
+  color: #3182ce;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.emi-title h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #1a202c;
+}
+
+.emi-title p {
+  margin: 0;
+  font-size: 13px;
+  color: #718096;
+}
+
+.emi-badges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-paid {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.badge-upcoming {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.badge-overdue {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.emi-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-label {
+  font-size: 12px;
+  color: #718096;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.emi-progress-bar {
+  margin-bottom: 24px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #edf2f7;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38a169, #48bb78);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  margin: 0;
+  font-size: 13px;
+  color: #718096;
+  text-align: center;
+}
+
+.emi-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.emi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.emi-table thead {
+  background: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.emi-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.emi-table td {
+  padding: 12px;
+  border-bottom: 1px solid #edf2f7;
+  color: #4a5568;
+}
+
+.emi-row {
+  transition: background-color 0.2s;
+}
+
+.emi-row:hover {
+  background: #f7fafc;
+}
+
+.emi-row.emi-paid {
+  background: #f0fdf4;
+}
+
+.emi-row.emi-paid:hover {
+  background: #e6f9ed;
+}
+
+.emi-row.emi-upcoming {
+  background: #f0f9ff;
+}
+
+.emi-row.emi-upcoming:hover {
+  background: #e0f2fe;
+}
+
+.emi-row.emi-overdue {
+  background: #fef2f2;
+}
+
+.emi-row.emi-overdue:hover {
+  background: #fee2e2;
+}
+
+.month-button {
+  background: none;
+  border: none;
+  color: #3182ce;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.month-button:hover {
+  color: #2c5aa0;
+}
+
+.amount-cell,
+.balance-cell {
+  text-align: right;
+  font-weight: 600;
+  color: #1a202c;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-paid {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status-upcoming {
+  background: #bee3f8;
+  color: #2c5282;
+}
+
+.status-overdue {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.emi-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.legend-color {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.legend-paid {
+  background: #c6f6d5;
+}
+
+.legend-upcoming {
+  background: #bee3f8;
+}
+
+.legend-overdue {
+  background: #fed7d7;
+}
+
+.emi-empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .emi-schedule-container {
+    padding: 16px;
+  }
+
+  .emi-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .emi-badges {
+    width: 100%;
+  }
+
+  .emi-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-value {
+    font-size: 16px;
+  }
+
+  .emi-table {
+    font-size: 12px;
+  }
+
+  .emi-table th,
+  .emi-table td {
+    padding: 8px;
+  }
+}
