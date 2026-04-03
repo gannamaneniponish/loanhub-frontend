@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogIn, Clock, ShieldCheck, Lock, Eye, EyeOff, Award, CheckCircle } from 'lucide-react'
+import { LogIn, Clock, ShieldCheck, Lock, Eye, EyeOff, Award, CheckCircle, X, User, Mail, Phone } from 'lucide-react'
 import { LogoIcon } from '../components/Logo'
 import './Login.css'
 
@@ -14,6 +14,67 @@ export function toggle2FA(userId, enabled) {
   localStorage.setItem(`2fa_enabled_${userId}`, enabled ? 'true' : 'false')
 }
 
+// ─── Admin Modal ──────────────────────────────────────────────────────────────
+function AdminModal({ onClose, onLogin }) {
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminPassword, setAdminPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail, password: adminPassword })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Invalid credentials')
+      if (data.data.user.role !== 'admin') throw new Error('This account is not an admin account.')
+      localStorage.setItem('token', data.data.token)
+      localStorage.setItem('currentUser', JSON.stringify(data.data.user))
+      onLogin(data.data.user)
+      onClose()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const inp = { width: '100%', padding: '10px 14px', border: '1.5px solid #e2e8f0', borderRadius: '9px', fontSize: '14px', outline: 'none', boxSizing: 'border-box' }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+      <div style={{ background: 'white', borderRadius: '18px', padding: '32px 28px', width: '100%', maxWidth: '420px', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', position: 'relative' }}>
+        <button onClick={onClose} style={{ position: 'absolute', top: '16px', right: '16px', background: '#f7fafc', border: 'none', borderRadius: '8px', padding: '6px', cursor: 'pointer', color: '#718096' }}><X size={18} /></button>
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #667eea, #764ba2)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}><ShieldCheck size={28} color="white" /></div>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '800', color: '#1a202c' }}>Admin Login</h2>
+          <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#718096' }}>Login with admin@loanhub.com / admin123</p>
+        </div>
+        {error && <div style={{ background: '#fff5f5', color: '#c53030', border: '1px solid #fed7d7', borderRadius: '8px', padding: '10px 14px', fontSize: '13px', marginBottom: '14px' }}>{error}</div>}
+        <form onSubmit={handleAdminLogin}>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '13px', color: '#4a5568' }}>Email</label>
+            <input style={inp} type="email" value={adminEmail} onChange={e => setAdminEmail(e.target.value)} placeholder="admin@loanhub.com" required />
+          </div>
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '600', fontSize: '13px', color: '#4a5568' }}>Password</label>
+            <input style={inp} type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} placeholder="Enter password" required />
+          </div>
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '12px', background: 'linear-gradient(135deg, #667eea, #764ba2)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <ShieldCheck size={16} />{loading ? 'Please wait...' : 'Login as Admin'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function Login({ onLogin, setUsers }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +83,7 @@ export default function Login({ onLogin, setUsers }) {
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showAdminModal, setShowAdminModal] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [dob, setDob] = useState('')
@@ -43,6 +105,7 @@ export default function Login({ onLogin, setUsers }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || 'Invalid email or password')
+      if (data.data.user.role === 'admin') throw new Error('Admin accounts must log in using the "Admin Login" button below.')
       localStorage.setItem('token', data.data.token)
       localStorage.setItem('currentUser', JSON.stringify(data.data.user))
       onLogin(data.data.user)
@@ -92,6 +155,7 @@ export default function Login({ onLogin, setUsers }) {
 
   return (
     <div className="login-container">
+      {showAdminModal && <AdminModal onClose={() => setShowAdminModal(false)} onLogin={onLogin} />}
       <div className="login-card">
         <div className="login-header">
           <LogoIcon size={52} />
@@ -188,6 +252,12 @@ export default function Login({ onLogin, setUsers }) {
           <><div className="login-divider">Already have an account?</div><button onClick={() => { reset(); setIsSignUp(false) }} className="btn btn-outline btn-block">Sign In</button></>
         ) : (
           <><div className="login-divider" style={{ marginBottom: '10px' }} /><button onClick={() => { reset(); setIsSignUp(true) }} className="btn btn-outline btn-block">Create Account</button></>
+        )}
+
+        {!isSignUp && (
+          <button onClick={() => setShowAdminModal(true)} style={{ marginTop: '10px', width: '100%', padding: '11px 16px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', boxShadow: '0 2px 8px rgba(102,126,234,0.35)' }}>
+            <ShieldCheck size={16} />Admin Login
+          </button>
         )}
 
         <div style={{ marginTop: '20px', padding: '14px', background: '#f7fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
