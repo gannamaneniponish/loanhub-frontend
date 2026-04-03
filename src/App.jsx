@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import './App.css'
 
@@ -13,8 +13,8 @@ import Payment from './pages/Payment'
 import Profile from './pages/Profile'
 import Navigation from './components/Navigation'
 import Sidebar from './components/Sidebar'
-import { notifyLoanAccepted, notifyPaymentReceived } from './components/NotificationSystem'
 import MobileBottomNav from './components/MobileBottomNav'
+import { LoanAPI, UserAPI, TransactionAPI, NotificationAPI } from './utils/api'
 
 // Apply saved dark mode preference immediately on load
 ;(function initDarkMode() {
@@ -28,206 +28,149 @@ function App() {
   const [users, setUsers] = useState([])
   const [transactions, setTransactions] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('loans')
+  const [showLanding, setShowLanding] = useState(false)
 
+  // Load user from localStorage on startup
   useEffect(() => {
     const savedUser = localStorage.getItem('currentUser')
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser)
-      // Check if user was suspended or deleted since last login
-      try {
-        const deletedIds = (() => { try { const s = localStorage.getItem('deletedUserIds'); return s ? JSON.parse(s) : [] } catch { return [] } })()
-        if (deletedIds.includes(parsedUser.id)) { localStorage.removeItem('currentUser') }
-        else {
-          const reg = (() => { try { const s = localStorage.getItem('registeredUsers'); return s ? JSON.parse(s) : [] } catch { return [] } })()
-          const regEntry = reg.find(u => u.id === parsedUser.id || u.email === parsedUser.email)
-          if (regEntry?.status === 'suspended') { localStorage.removeItem('currentUser') }
-          else setUser(parsedUser)
-        }
-      } catch { setUser(parsedUser) }
+    const token = localStorage.getItem('token')
+    if (savedUser && token) {
+      setUser(JSON.parse(savedUser))
+    } else {
+      setShowLanding(true)
     }
-    const savedLoans = localStorage.getItem('loans')
-    const savedTransactions = localStorage.getItem('transactions')
-    const savedNotifications = localStorage.getItem('notifications')
-    if (savedLoans) setLoans(JSON.parse(savedLoans))
-    if (savedTransactions) setTransactions(JSON.parse(savedTransactions))
-    if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
+    setLoading(false)
+  }, [])
 
-    // Build merged user list from defaults + registered + customAdmin
-    const DEFAULT_SAMPLE_USERS = [
-      { id: 2, name: 'John Lender',   email: 'lender@loanhub.com',   role: 'lender',   phone: '9000000002', status: 'active' },
-      { id: 3, name: 'Jane Borrower', email: 'borrower@loanhub.com', role: 'borrower', phone: '9000000003', status: 'active' },
-      { id: 4, name: 'Analyst Pro',   email: 'analyst@loanhub.com',  role: 'analyst',  phone: '9000000004', status: 'active' }
-    ]
+  // Fetch all data from backend when user logs in
+  const fetchAllData = useCallback(async () => {
+    if (!localStorage.getItem('token')) return
     try {
-      const saved = localStorage.getItem('registeredUsers')
-      const registered = saved ? JSON.parse(saved) : []
-      const deletedIds = (() => { try { const s = localStorage.getItem('deletedUserIds'); return s ? JSON.parse(s) : [] } catch { return [] } })()
-
-      // Start with defaults, skip deleted, apply any status overrides from registeredUsers
-      const merged = DEFAULT_SAMPLE_USERS
-        .filter(u => !deletedIds.includes(u.id))
-        .map(u => {
-          const override = registered.find(r => r.email === u.email)
-          const { password: _p, ...clean } = override || {}
-          return override ? { ...u, ...clean } : u
-        })
-
-      // Add extra registered users (not in defaults), skip deleted and pending
-      for (const ru of registered) {
-        if (!DEFAULT_SAMPLE_USERS.find(u => u.email === ru.email) && !deletedIds.includes(ru.id)) {
-          const { password: _p, ...withoutPwd } = ru
-          if (withoutPwd.status !== 'pending') merged.push(withoutPwd)
-        }
-      }
-
-      // Load custom admin if registered and not deleted
-      const savedAdmin = localStorage.getItem('customAdmin')
-      if (savedAdmin) {
-        const admin = JSON.parse(savedAdmin)
-        if (!deletedIds.includes(admin.id) && !merged.find(u => u.email === admin.email)) {
-          const { password: _p, ...withoutPwd } = admin
-          merged.push(withoutPwd)
-        }
-      }
-      setUsers(merged)
-    } catch {
-      setUsers(DEFAULT_SAMPLE_USERS)
+      const [loansRes, usersRes, transactionsRes, notificationsRes] = await Promise.allSettled([
+        LoanAPI.getAll(),
+        UserAPI.getAll(),
+        TransactionAPI.getAll(),
+        NotificationAPI.getAll()
+      ])
+      if (loansRes.status === 'fulfilled') setLoans(loansRes.value.data || [])
+      if (usersRes.status === 'fulfilled') setUsers(usersRes.value.data || [])
+      if (transactionsRes.status === 'fulfilled') setTransactions(transactionsRes.value.data || [])
+      if (notificationsRes.status === 'fulfilled') setNotifications(notificationsRes.value.data || [])
+    } catch (err) {
+      console.error('Error fetching data:', err)
     }
   }, [])
 
+  useEffect(() => {
+    if (user) fetchAllData()
+  }, [user, fetchAllData])
+
   const handleLogin = (userData) => {
     setUser(userData)
+    setShowLanding(false)
     localStorage.setItem('currentUser', JSON.stringify(userData))
   }
 
   const handleLogout = () => {
     setUser(null)
+    setShowLanding(true)
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('token')
   }
 
   const handleUpdateUser = (updatedUser) => {
     setUser(updatedUser)
+    localStorage.setItem('currentUser', JSON.stringify(updatedUser))
   }
 
-  const addLoan = (loanData, currentNotifs) => {
-    const newLoan = {
-      id: Date.now(),
-      ...loanData,
-      createdAt: new Date(),
-      status: loanData.status || 'pending'
-    }
-    const updatedLoans = [...loans, newLoan]
-    setLoans(updatedLoans)
-    localStorage.setItem('loans', JSON.stringify(updatedLoans))
-
-    if (loanData.borrowerId) {
-      const notif = {
-        id: Date.now() + 1,
-        type: 'loan_application',
-        loanId: newLoan.id,
-        message: `New loan application from ${loanData.borrowerName} for Rs.${parseFloat(loanData.amount).toLocaleString('en-IN')} at ${loanData.interestRate}% interest rate.`,
-        borrowerName: loanData.borrowerName,
-        borrowerId: loanData.borrowerId,
-        amount: loanData.amount,
-        interestRate: loanData.interestRate,
-        term: loanData.term,
-        purpose: loanData.purpose,
-        targetRole: 'lender',
-        timestamp: new Date(),
-        read: false,
-        accepted: false
-      }
-      const prevNotifs = currentNotifs || notifications
-      const updatedNotifs = [...prevNotifs, notif]
-      setNotifications(updatedNotifs)
-      localStorage.setItem('notifications', JSON.stringify(updatedNotifs))
-    }
-    return newLoan
-  }
-
-  const updateLoan = (loanId, updates) => {
-    const updatedLoans = loans.map(loan => loan.id === loanId ? { ...loan, ...updates } : loan)
-    setLoans(updatedLoans)
-    localStorage.setItem('loans', JSON.stringify(updatedLoans))
-
-    // Fire "loan accepted" notification when status changes to active
-    if (updates.status === 'active') {
-      const loan = loans.find(l => l.id === loanId)
-      if (loan) {
-        const borrower = users.find(u => u.id === loan.borrowerId || u.name === loan.borrowerName)
-        const lender = users.find(u => u.id === updates.lenderId || u.id === loan.lenderId)
-        if (borrower) {
-          notifyLoanAccepted(borrower.id, borrower.email, borrower.phone, loan.amount, lender?.name || 'A lender')
-        }
-      }
+  // ─── Loans ────────────────────────────────────────────────────────────────
+  const addLoan = async (loanData) => {
+    try {
+      const res = await LoanAPI.create(loanData)
+      const newLoan = res.data
+      setLoans(prev => [...prev, newLoan])
+      await fetchAllData()
+      return newLoan
+    } catch (err) {
+      console.error('Error creating loan:', err)
+      // Fallback to localStorage
+      const newLoan = { id: Date.now(), ...loanData, createdAt: new Date(), status: 'pending' }
+      setLoans(prev => [...prev, newLoan])
+      return newLoan
     }
   }
 
-  const addTransaction = (transactionData) => {
-    const newTransaction = { id: Date.now(), ...transactionData, timestamp: new Date() }
-    const updatedTransactions = [...transactions, newTransaction]
-    setTransactions(updatedTransactions)
-    localStorage.setItem('transactions', JSON.stringify(updatedTransactions))
-
-    // Fire "payment received" notification to lender when borrower makes a payment
-    if (transactionData.type === 'payment' && transactionData.lenderId) {
-      const lender = users.find(u => u.id === transactionData.lenderId)
-      if (lender) {
-        const borrowerName = transactionData.borrowerName || 'A borrower'
-        notifyPaymentReceived(lender.id, lender.email, lender.phone, borrowerName, transactionData.amount)
-      }
-    }
-
-    return newTransaction
-  }
-
-  const markNotificationRead = (notificationId, lenderId) => {
-    const updated = notifications.map(n => {
-      if (n.id !== notificationId) return n
-      if (lenderId) {
-        const declinedBy = n.declinedBy ? [...n.declinedBy, lenderId] : [lenderId]
-        return { ...n, declinedBy }
-      }
-      return { ...n, read: true }
-    })
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-
-    // Check if ALL lenders have declined -> mark loan as declined
-    if (lenderId) {
-      const notif = notifications.find(n => n.id === notificationId)
-      if (notif) {
-        const allLenders = users.filter(u => u.role === 'lender')
-        const newDeclinedBy = notif.declinedBy ? [...notif.declinedBy, lenderId] : [lenderId]
-        const allDeclined = allLenders.length > 0 && allLenders.every(l => newDeclinedBy.includes(l.id))
-        if (allDeclined) {
-          const updatedLoans = loans.map(loan =>
-            loan.id === notif.loanId ? { ...loan, status: 'declined' } : loan
-          )
-          setLoans(updatedLoans)
-          localStorage.setItem('loans', JSON.stringify(updatedLoans))
-        }
-      }
+  const updateLoan = async (loanId, updates) => {
+    try {
+      await LoanAPI.update(loanId, updates)
+      setLoans(prev => prev.map(loan => loan.id === loanId ? { ...loan, ...updates } : loan))
+      await fetchAllData()
+    } catch (err) {
+      console.error('Error updating loan:', err)
+      setLoans(prev => prev.map(loan => loan.id === loanId ? { ...loan, ...updates } : loan))
     }
   }
 
-  // When a lender accepts, mark that loanId notification as accepted across ALL lenders
-  const markNotificationAccepted = (loanId) => {
-    const updated = notifications.map(n =>
+  // ─── Transactions ─────────────────────────────────────────────────────────
+  const addTransaction = async (transactionData) => {
+    try {
+      const res = await TransactionAPI.create(transactionData)
+      const newTransaction = res.data
+      setTransactions(prev => [...prev, newTransaction])
+      await fetchAllData()
+      return newTransaction
+    } catch (err) {
+      console.error('Error creating transaction:', err)
+      const newTransaction = { id: Date.now(), ...transactionData, timestamp: new Date() }
+      setTransactions(prev => [...prev, newTransaction])
+      return newTransaction
+    }
+  }
+
+  // ─── Notifications ────────────────────────────────────────────────────────
+  const markNotificationRead = async (notificationId, lenderId) => {
+    try {
+      await NotificationAPI.markRead(notificationId)
+      setNotifications(prev => prev.map(n =>
+        n.id === notificationId ? { ...n, read: true } : n
+      ))
+    } catch (err) {
+      console.error('Error marking notification read:', err)
+      setNotifications(prev => prev.map(n =>
+        n.id === notificationId ? { ...n, read: true } : n
+      ))
+    }
+  }
+
+  const markNotificationAccepted = async (loanId) => {
+    setNotifications(prev => prev.map(n =>
       n.loanId === loanId ? { ...n, read: true, accepted: true } : n
+    ))
+    await fetchAllData()
+  }
+
+  const markAllNotificationsRead = async (role) => {
+    try {
+      await NotificationAPI.markAllRead()
+      setNotifications(prev => prev.map(n =>
+        n.targetRole === role ? { ...n, read: true } : n
+      ))
+    } catch (err) {
+      setNotifications(prev => prev.map(n =>
+        n.targetRole === role ? { ...n, read: true } : n
+      ))
+    }
+  }
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', fontSize: '18px' }}>
+        Loading...
+      </div>
     )
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
   }
-
-  const markAllNotificationsRead = (role) => {
-    const updated = notifications.map(n => n.targetRole === role ? { ...n, read: true } : n)
-    setNotifications(updated)
-    localStorage.setItem('notifications', JSON.stringify(updated))
-  }
-
-  const [showLanding, setShowLanding] = useState(() => !localStorage.getItem('currentUser'))
-  const [activeTab, setActiveTab] = useState('loans')
 
   if (showLanding && !user) {
     return <LandingPage onGetStarted={() => setShowLanding(false)} />
@@ -250,7 +193,12 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to={`/${user.role}`} />} />
               <Route path="/admin/*" element={user.role === 'admin' ? (
-                <AdminDashboard users={users} setUsers={setUsers} loans={loans} transactions={transactions} activeTab={activeTab} onTabChange={setActiveTab} />
+                <AdminDashboard
+                  users={users} setUsers={setUsers}
+                  loans={loans} transactions={transactions}
+                  activeTab={activeTab} onTabChange={setActiveTab}
+                  refreshData={fetchAllData}
+                />
               ) : <Navigate to="/" />} />
               <Route path="/lender/*" element={user.role === 'lender' ? (
                 <LenderDashboard
@@ -265,16 +213,29 @@ function App() {
                 />
               ) : <Navigate to="/" />} />
               <Route path="/borrower/*" element={user.role === 'borrower' ? (
-                <BorrowerDashboard user={user} loans={loans} addLoan={addLoan} addTransaction={addTransaction} transactions={transactions} notifications={notifications} users={users} activeTab={activeTab} onTabChange={setActiveTab} />
+                <BorrowerDashboard
+                  user={user} loans={loans} addLoan={addLoan}
+                  addTransaction={addTransaction} transactions={transactions}
+                  notifications={notifications} users={users}
+                  activeTab={activeTab} onTabChange={setActiveTab}
+                />
               ) : <Navigate to="/" />} />
               <Route path="/analyst/*" element={user.role === 'analyst' ? (
-                <AnalystDashboard loans={loans} transactions={transactions} users={users} user={user} activeTab={activeTab} onTabChange={setActiveTab} />
+                <AnalystDashboard
+                  loans={loans} transactions={transactions}
+                  users={users} user={user}
+                  activeTab={activeTab} onTabChange={setActiveTab}
+                />
               ) : <Navigate to="/" />} />
               <Route path="/profile" element={
                 <Profile user={user} onUpdateUser={handleUpdateUser} />
               } />
-              <Route path="/loan/:id" element={<LoanDetails loans={loans} addTransaction={addTransaction} user={user} users={users} />} />
-              <Route path="/payment/:id" element={<Payment loans={loans} transactions={transactions} addTransaction={addTransaction} updateLoan={updateLoan} />} />
+              <Route path="/loan/:id" element={
+                <LoanDetails loans={loans} addTransaction={addTransaction} user={user} users={users} />
+              } />
+              <Route path="/payment/:id" element={
+                <Payment loans={loans} transactions={transactions} addTransaction={addTransaction} updateLoan={updateLoan} />
+              } />
             </Routes>
           </main>
         </div>
