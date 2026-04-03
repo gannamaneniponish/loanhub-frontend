@@ -5,6 +5,15 @@ import './Login.css'
 
 const API = 'https://loanhub-backend.onrender.com/api'
 
+// ─── 2FA helpers (kept for Profile.jsx compatibility) ─────────────────────────
+export function is2FAEnabled(userId) {
+  try { return localStorage.getItem(`2fa_enabled_${userId}`) === 'true' } catch { return false }
+}
+
+export function toggle2FA(userId, enabled) {
+  localStorage.setItem(`2fa_enabled_${userId}`, enabled ? 'true' : 'false')
+}
+
 export default function Login({ onLogin, setUsers }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
